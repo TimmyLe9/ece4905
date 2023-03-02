@@ -12,11 +12,25 @@
 #include <SPI.h>
 
 //TFT_eSPI tft = TFT_eSPI();  // Invoke custom library
+/*
+#define YP analogRead()   // must be an analog pin, use "An" notation!
+#define XM analogRead()  // must be an analog pin, use "An" notation!
+#define YM    // can be a digital pin
+#define XP    // can be a digital pin
+*/
+
 
 #define XP analogRead(15)
 #define XM analogRead(12)
 #define YP analogRead(2)
 #define YM analogRead(13)
+
+/*
+#define XP 15
+#define XM 12
+#define YP 2
+#define YM 13
+*/
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 #define TFT_SCK    21
@@ -35,13 +49,6 @@ uint16_t Y_MAX = 0;
 const int pH_pin=14;
 float pH_reading;
 float Value;
-
-/*
-#define YP analogRead()   // must be an analog pin, use "An" notation!
-#define XM analogRead()  // must be an analog pin, use "An" notation!
-#define YM    // can be a digital pin
-#define XP    // can be a digital pin
-*/
 
 #define BLACK 0x0000
 #define BLUE 0x001F
@@ -62,7 +69,7 @@ void setup() {
 
   homeScreen();
   sysTime = millis();
-  Serial.begin(115200);
+  Serial.begin(9600);
   pinMode(pH_pin,INPUT);
 }
 
@@ -81,7 +88,7 @@ void loop() {
 }
 
 
-// Create the home screen
+/* Create the home screen */
 void homeScreen() {
   // Header
   tft.setCursor(X_CENTER - 100, Y_CENTER - 100);
@@ -104,18 +111,18 @@ void homeScreen() {
   */
 }
 
-// Displaing pH Value
+/* Displaing pH Value */
 void pH_display() {
     Value = analogRead(pH_pin);
     float voltage = Value * (3.3/4095.0);
     pH_reading = (3.3  * voltage) * (14/10.89);
     
-    if (pH_reading < 7.0 or pH_reading >= 8.0) {
+    if (pH_reading < 7.0 or pH_reading >= 8.0) { // display number in red when solution not neutral
       tft.setCursor(X_CENTER - 110, Y_CENTER - 20);
       tft.setTextSize(7);
       tft.setTextColor(RED, BLACK);
       tft.print(pH_reading);
-    } else {
+    } else { // display number in green when solution is neutral
       tft.setCursor(X_CENTER - 110, Y_CENTER - 20);
       tft.setTextSize(7);
       tft.setTextColor(GREEN, BLACK);
