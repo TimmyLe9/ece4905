@@ -3,52 +3,32 @@
 #include <gfxfont.h>
 #include <Adafruit_GFX.h>
 #include <TouchScreen.h>
-
-/*
- * Code for pH sensor screen for ECE 4905 Team 24 - Timmy Le.382
- */
-
 #include <TFT_eSPI.h> // Hardware-specific library
 #include <SPI.h>
 
-//TFT_eSPI tft = TFT_eSPI();  // Invoke custom library
 /*
-#define YP analogRead()   // must be an analog pin, use "An" notation!
-#define XM analogRead()  // must be an analog pin, use "An" notation!
-#define YM    // can be a digital pin
-#define XP    // can be a digital pin
+   Code for pH sensor screen for ECE 4905 Team 24 - Timmy Le.382
 */
 
+//TFT_eSPI tft = TFT_eSPI();  // Invoke custom library
 
-#define XP analogRead(15)
-#define XM analogRead(12)
-#define YP analogRead(2)
-#define YM analogRead(13)
+// *** I/O Pins and defines ***
 
-/*
 #define XP 15
 #define XM 12
 #define YP 2
 #define YM 13
-*/
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 #define TFT_SCK    21
-#define TFT_MOSI   19
 #define TFT_MISO   22
+#define TFT_MOSI   19
 #define TFT_CS     23
-#define TFT_DC     5
-#define TFT_RESET  10
+#define TFT_DC     18
+#define TFT_RESET  5
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCK, TFT_RESET, TFT_MISO);
 
-uint32_t sysTime = 0;  // System current time
-uint16_t X_CENTER = 170;
-uint16_t Y_CENTER = 120;
-uint16_t X_MAX = 0;
-uint16_t Y_MAX = 0;
-const int pH_pin=14;
-float pH_reading;
-float Value;
+#define PH_PIN 14
 
 #define BLACK 0x0000
 #define BLUE 0x001F
@@ -59,9 +39,21 @@ float Value;
 #define YELLOW 0xFFE0
 #define WHITE 0xFFFF
 
+// ***GLOBAL VARIABLE***
+uint16_t X_MAX = 320;
+uint16_t Y_MAX = 240; // -1 pixel to display
+uint32_t sysTime = 0;  // System current time
+uint16_t X_CENTER = X_MAX / 2;
+uint16_t Y_CENTER = Y_MAX / 2;
+float pH_reading;
+float Value;
+bool checkBack = false;
+float OFFSET = -0.30;
+
+// ***** Code Starts *****
 void setup() {
   // put your setup code here, to run once:
-  
+
   tft.initSPI();
   tft.begin();
   tft.setRotation(1);
@@ -70,70 +62,158 @@ void setup() {
   homeScreen();
   sysTime = millis();
   Serial.begin(9600);
-  pinMode(pH_pin,INPUT);
+  pinMode(PH_PIN, INPUT);
+
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
-    pH_display();
-    TSPoint p = ts.getPoint();
 
-    if (p.z > ts.pressureThreshhold) {
-      Serial.print("X = "); Serial.print(p.x);
-      Serial.print("\tY = "); Serial.print(p.y);
-      Serial.print("\tPressure = "); Serial.println(p.z);
+  TSPoint p = ts.getPoint();
+  //Serial.print("X = "); Serial.print(p.x);
+  //Serial.print("\tY = "); Serial.print(p.y);
+  //Serial.print("\tPressure = "); Serial.println(p.z);
+
+  // if battery button is pressed || p.x > -2200 and p.x < -1830 and p.y > 416 and p.y < 1025 and
+  if (p.z != 0 and checkBack == false) {
+    tft.fillScreen(BLACK);
+    batteryScreen();
+    checkBack = true;
   }
-    delay(1000); // delay in ms
-}
 
+  /*
+    // if extra button is pressed
+    else if (p.x > -3077 and p.x < -1825 and p.y > 416 and p.y < 1025 and p.z != 0 and checkBack == 0) {
+      tft.fillScreen(BLACK);
+      extraScreen();
+      checkBack = true;
+    } */
+
+  // back button
+  else if (p.z != 0 and checkBack == true) {
+    tft.fillScreen(BLACK);
+    homeScreen();
+    checkBack = false;
+  }
+
+  if (checkBack == false and p.z == 0) {
+    pH_display();
+  }
+
+  delay(500); // delay in ms
+}
 
 /* Create the home screen */
 void homeScreen() {
   // Header
-  tft.setCursor(X_CENTER - 100, Y_CENTER - 100);
+  tft.setCursor(X_CENTER - 100, 10);
   tft.setTextSize(2);
   tft.setTextColor(WHITE, BLACK);
   tft.print("Team 24 pH Sensor");
-  
-  tft.setCursor(X_CENTER - 100, Y_CENTER - 60);
+
+  tft.setCursor(X_CENTER - 100, 40);
   tft.setTextSize(4);
   tft.setTextColor(WHITE, BLACK);
   tft.print("pH Level:");
-/*
+
   // Battery Button
-  tft.fillRect();
-  tft.drawCentreString("Battery", X_CENTER - 160, Y_CENTER + 80, 2);
+  tft.fillRect(15, Y_MAX - 50, 50, 40, GREEN);
+  tft.setCursor(20, Y_MAX - 33);
+  tft.setTextSize(1);
+  tft.setTextColor(BLACK);
+  tft.print("Battery");
 
   // Info/Extra Button
-  tft.fillRect();
-  tft.drawCentreString("Info", X_CENTER + 40, Y_CENTER + 80); 
-  */
+  tft.fillRect(X_MAX - 75, Y_MAX - 50, 50, 40, CYAN);
+  tft.setCursor(X_MAX - 65, Y_MAX - 33);
+  tft.setTextSize(1);
+  tft.setTextColor(BLACK);
+  tft.print("Extra");
+
 }
 
 /* Displaing pH Value */
 void pH_display() {
-    Value = analogRead(pH_pin);
-    float voltage = Value * (3.3/4095.0);
-    pH_reading = (3.3  * voltage) * (14/10.89);
-    
-    if (pH_reading < 7.0 or pH_reading >= 8.0) { // display number in red when solution not neutral
-      tft.setCursor(X_CENTER - 110, Y_CENTER - 20);
-      tft.setTextSize(7);
-      tft.setTextColor(RED, BLACK);
-      tft.print(pH_reading);
-    } else { // display number in green when solution is neutral
-      tft.setCursor(X_CENTER - 110, Y_CENTER - 20);
-      tft.setTextSize(7);
-      tft.setTextColor(GREEN, BLACK);
-      tft.print(pH_reading);
-    }
+  Value = analogRead(PH_PIN);
+  float voltage = Value * (5.0/1024);
+  pH_reading = (3.3  * voltage) + OFFSET;
+  Serial.print("Value "); Serial.println(Value);
+  Serial.print("Voltage "); Serial.println(voltage);
+  Serial.print("pH "); Serial.println(pH_reading);
+
+  if (pH_reading < 6.99) {                             // Acid
+    tft.setCursor(X_CENTER - 110, Y_CENTER - 30);
+    tft.setTextSize(7);
+    tft.setTextColor(RED, BLACK);
+    tft.print(pH_reading);
+
+    tft.fillRect(X_CENTER - 23, Y_CENTER + 40, 60, 10, BLACK);
+    tft.setCursor(X_CENTER - 25, Y_CENTER + 40);
+    tft.setTextSize(1);
+    tft.setTextColor(RED, BLACK);
+    tft.print("Acidic");
+
+  } else if (pH_reading >= 8.0) {                     // Base
+    tft.setCursor(X_CENTER - 110, Y_CENTER - 30);
+    tft.setTextSize(7);
+    tft.setTextColor(RED, BLACK);
+    tft.print(pH_reading);
+
+    tft.fillRect(X_CENTER - 23, Y_CENTER + 40, 60, 10, BLACK);
+    tft.setCursor(X_CENTER - 25, Y_CENTER + 40);
+    tft.setTextSize(1);
+    tft.setTextColor(RED, BLACK);
+    tft.print("Alkaline");
+
+  } else {                                           // Neutral
+    tft.setCursor(X_CENTER - 110, Y_CENTER - 30);
+    tft.setTextSize(7);
+    tft.setTextColor(GREEN, BLACK);
+    tft.print(pH_reading);
+
+    tft.fillRect(X_CENTER - 23, Y_CENTER + 40, 60, 10, BLACK);
+    tft.setCursor(X_CENTER - 25, Y_CENTER + 40);
+    tft.setTextSize(1);
+    tft.setTextColor(GREEN, BLACK);
+    tft.print("Neutral");
+  }
 }
 
 void batteryScreen() {
-  
+  tft.setCursor(20, Y_CENTER);
+  tft.setTextSize(2);
+  tft.setTextColor(MAGENTA);
+  tft.print("Battery Page, TBD");
+
+  // back button
+  tft.fillRect(X_MAX - 75, Y_MAX - 50, 50, 40, CYAN);
+  tft.setCursor(X_MAX - 65, Y_MAX - 33);
+  tft.setTextSize(1);
+  tft.setTextColor(BLACK);
+  tft.print("Back");
 }
 
-void infoScreen() {
-  
+void extraScreen() {
+
+  tft.setCursor(1, 15);
+  tft.setTextSize(2);
+  tft.setTextColor(WHITE);
+  tft.print("This screen is extra...");
+  tft.print("\n");
+  tft.print("Team 24 pH Sensor Project");
+  tft.print("\n");
+  tft.setTextSize(2);
+  tft.print("Victoria \n");
+  tft.print("James \n");
+  tft.print("Jared \n");
+  tft.print("Chamyukthan \n");
+  tft.print("Daniel \n");
+  tft.print("Timmy \n");
+
+  // back button
+  tft.fillRect(X_MAX - 75, Y_MAX - 50, 50, 40, CYAN);
+  tft.setCursor(X_MAX - 65, Y_MAX - 33);
+  tft.setTextSize(1);
+  tft.setTextColor(BLACK);
+  tft.print("Back");
 }
