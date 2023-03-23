@@ -42,13 +42,12 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCK, TFT_R
 // ***GLOBAL VARIABLE***
 uint16_t X_MAX = 320;
 uint16_t Y_MAX = 240; // -1 pixel to display
-uint32_t sysTime = 0;  // System current time
 uint16_t X_CENTER = X_MAX / 2;
 uint16_t Y_CENTER = Y_MAX / 2;
 float pH_reading;
 float Value;
 bool checkBack = false;
-float OFFSET = -0.30;
+float OFFSET = 0.0;
 
 // ***** Code Starts *****
 void setup() {
@@ -60,7 +59,6 @@ void setup() {
   tft.fillScreen(BLACK);
 
   homeScreen();
-  sysTime = millis();
   Serial.begin(9600);
   pinMode(PH_PIN, INPUT);
 
@@ -74,20 +72,19 @@ void loop() {
   //Serial.print("\tY = "); Serial.print(p.y);
   //Serial.print("\tPressure = "); Serial.println(p.z);
 
-  // if battery button is pressed || p.x > -2200 and p.x < -1830 and p.y > 416 and p.y < 1025 and
-  if (p.z != 0 and checkBack == false) {
+  // if battery button is pressed 
+  if (p.x > -2300 and p.x < -1700 and p.y > -2300 and p.y < -1072 and p.z != 0 and checkBack == false) {
     tft.fillScreen(BLACK);
     batteryScreen();
     checkBack = true;
   }
 
-  /*
     // if extra button is pressed
-    else if (p.x > -3077 and p.x < -1825 and p.y > 416 and p.y < 1025 and p.z != 0 and checkBack == 0) {
+    else if (p.x > -2100 and p.x < -1750 and p.y > -149 and p.y < 284 and p.z != 0 and checkBack == false) {
       tft.fillScreen(BLACK);
       extraScreen();
       checkBack = true;
-    } */
+    }
 
   // back button
   else if (p.z != 0 and checkBack == true) {
@@ -96,7 +93,7 @@ void loop() {
     checkBack = false;
   }
 
-  if (checkBack == false and p.z == 0) {
+  if (checkBack == false) {
     pH_display();
   }
 
@@ -135,11 +132,11 @@ void homeScreen() {
 /* Displaing pH Value */
 void pH_display() {
   Value = analogRead(PH_PIN);
-  float voltage = Value * (5.0/1024);
+  float voltage = Value * (5.0/4095.0);
   pH_reading = (3.3  * voltage) + OFFSET;
-  Serial.print("Value "); Serial.println(Value);
-  Serial.print("Voltage "); Serial.println(voltage);
-  Serial.print("pH "); Serial.println(pH_reading);
+  //Serial.print("Value "); Serial.println(Value);
+  //Serial.print("Voltage "); Serial.println(voltage);
+  //Serial.print("pH "); Serial.println(pH_reading);
 
   if (pH_reading < 6.99) {                             // Acid
     tft.setCursor(X_CENTER - 110, Y_CENTER - 30);
