@@ -18,7 +18,10 @@
 #define XM 12
 #define YP 2
 #define YM 13
-TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+// For better pressure precision, we need to know the resistance
+// between X+ and X- Use any multimeter to read it
+// For the one we're using, its 300 ohms across the X plate
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 50);
 
 #define TFT_SCK    21
 #define TFT_MISO   22
@@ -68,19 +71,19 @@ void loop() {
   // put your main code here, to run repeatedly:
 
   TSPoint p = ts.getPoint();
-  //Serial.print("X = "); Serial.print(p.x);
-  //Serial.print("\tY = "); Serial.print(p.y);
-  //Serial.print("\tPressure = "); Serial.println(p.z);
+  Serial.print("X = "); Serial.print(p.x);
+  Serial.print("\tY = "); Serial.print(p.y);
+  Serial.print("\tPressure = "); Serial.println(p.z);
 
   // if battery button is pressed 
-  if (p.x > -2300 and p.x < -1700 and p.y > -2300 and p.y < -1072 and p.z != 0 and checkBack == false) {
+  if (p.x > -3100 and p.x < -1200 and p.y > -2800 and p.y < -1000 and p.z != 0 and checkBack == false) {
     tft.fillScreen(BLACK);
     batteryScreen();
     checkBack = true;
   }
 
     // if extra button is pressed
-    else if (p.x > -2100 and p.x < -1750 and p.y > -149 and p.y < 284 and p.z != 0 and checkBack == false) {
+    else if (p.x > -2400 and p.x < -1600 and p.y > -260 and p.y < 380 and p.z != 0 and checkBack == false) {
       tft.fillScreen(BLACK);
       extraScreen();
       checkBack = true;
