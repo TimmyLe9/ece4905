@@ -49,8 +49,8 @@ uint16_t X_CENTER = X_MAX / 2;
 uint16_t Y_CENTER = Y_MAX / 2;
 float pH_reading;
 float Value;
-bool checkBack = false;
-float OFFSET = 0.0;
+uint16_t screenPage = 0;  // 0: pH | 1: battery | 2: extra
+float OFFSET = -1.5;
 
 // ***** Code Starts *****
 void setup() {
@@ -62,6 +62,7 @@ void setup() {
   tft.fillScreen(BLACK);
 
   homeScreen();
+  //batteryScreen();
   Serial.begin(9600);
   pinMode(PH_PIN, INPUT);
 
@@ -76,28 +77,32 @@ void loop() {
   //Serial.print("\tPressure = "); Serial.println(p.z);
 
   // if battery button is pressed
-  if (p.x > -3100 and p.x < -1200 and p.y > -2800 and p.y < -1000 and p.z != 0 and checkBack == false) {
+  if (p.x > -3100 and p.x < -1200 and p.y > -2800 and p.y < -1000 and p.z != 0 and screenPage != 1 and screenPage != 2) {
     tft.fillScreen(BLACK);
     batteryScreen();
-    checkBack = true;
+    screenPage = 1;
   }
 
   // if extra button is pressed
-  else if (p.x > -2400 and p.x < -1600 and p.y > -260 and p.y < 380 and p.z != 0 and checkBack == false) {
+  else if (p.x > -2400 and p.x < -1600 and p.y > -260 and p.y < 380 and p.z != 0 and screenPage != 2 and screenPage != 1) {
     tft.fillScreen(BLACK);
     extraScreen();
-    checkBack = true;
+    screenPage = 2;
   }
 
   // back button
-  else if (p.z != 0 and checkBack == true) {
+  else if (p.z != 0 and screenPage != 0) {
     tft.fillScreen(BLACK);
     homeScreen();
-    checkBack = false;
+    screenPage = 0;
   }
 
-  if (checkBack == false) {
+  if (screenPage == 0) {
     pH_display();
+  }
+
+  if (screenPage == 1) {
+    batteryInfo();
   }
 
   delay(500); // delay in ms
@@ -178,7 +183,7 @@ void pH_display() {
     tft.setTextColor(GREEN, BLACK);
     tft.print("Neutral");
   }
-  if (pH_reading > 7.19 and pH_reading < 7.89) {    // Displaying if water if drinkable
+  if (pH_reading > 6.49 and pH_reading < 8.51) {    // Displaying if water if drinkable
     tft.fillRect(X_CENTER - 81, Y_CENTER + 55, 160, 15, BLACK);
     tft.setCursor(X_CENTER - 55, Y_CENTER + 55);
     tft.setTextSize(2);
@@ -192,11 +197,31 @@ void pH_display() {
   }
 }
 
-void batteryScreen() {
-  tft.setCursor(20, Y_CENTER);
+// Update all numbers on the batterScreen
+void batteryInfo() {
+  // battery percentage
+  tft.setCursor(X_MAX - 55, 15);
   tft.setTextSize(2);
-  tft.setTextColor(MAGENTA);
-  tft.print("Battery Page, TBD");
+  tft.setTextColor(YELLOW);
+  tft.print("##"); tft.print(" %");
+
+  // charge rate
+  tft.setCursor(X_MAX - 55, 35);
+  tft.setTextSize(2);
+  tft.setTextColor(YELLOW);
+  tft.print("##");
+}
+
+void batteryScreen() {
+  tft.setCursor(10, 15);
+  tft.setTextSize(2);
+  tft.setTextColor(YELLOW);
+  tft.print("Battery Percentage: ");
+
+  tft.setCursor(10, 35);
+  tft.setTextSize(2);
+  tft.setTextColor(YELLOW);
+  tft.print("Charge Rate: ");
 
   // back button
   tft.fillRect(X_MAX - 75, Y_MAX - 50, 50, 40, CYAN);
