@@ -142,62 +142,80 @@ void pH_display() {
   Value = analogRead(PH_PIN);
   float voltage = Value * (5.0 / 4095.0);
   pH_reading = (3.3  * voltage) + OFFSET;
-  tft.fillRect(0, Y_CENTER - 50, X_MAX, 100, BLACK);
+  
+  tft.fillRect(X_CENTER - 42, Y_CENTER + 20, X_MAX, 40, BLACK);
+  
   //Serial.print("Value "); Serial.println(Value);
   //Serial.print("Voltage "); Serial.println(voltage);
   //Serial.print("pH "); Serial.println(pH_reading);
 
   if (pH_reading < 6.999) {                            // Acid
-    tft.setCursor(X_CENTER - 70, Y_CENTER - 30);
-    tft.setTextSize(7);
-    tft.setTextColor(RED, BLACK);
+    tft.setCursor(X_CENTER - 40, Y_CENTER + 20);
+    tft.setTextSize(3);
+    if (pH_reading > 6.49) {
+      tft.setTextColor(GREEN, BLACK);
+    } else { 
+      tft.setTextColor(RED, BLACK);
+    }
     tft.print(pH_reading);
 
-    tft.fillRect(X_CENTER - 23, Y_CENTER + 40, 60, 10, BLACK);
-    tft.setCursor(X_CENTER - 25, Y_CENTER + 40);
+    tft.fillRect(X_CENTER - 23, Y_CENTER + 60, 40, 10, BLACK);
+    tft.setCursor(X_CENTER - 25, Y_CENTER + 70);
     tft.setTextSize(1);
-    tft.setTextColor(RED, BLACK);
+    if (pH_reading > 6.49) {
+      tft.setTextColor(GREEN, BLACK);
+    } else { 
+      tft.setTextColor(RED, BLACK);
+    }
     tft.print("Acidic");
 
   } else if (pH_reading >= 8.0) {                     // Base
-    tft.setCursor(X_CENTER - 100, Y_CENTER - 30);
-    tft.setTextSize(7);
-    tft.setTextColor(RED, BLACK);
+    tft.setCursor(X_CENTER - 40, Y_CENTER + 20);
+    tft.setTextSize(3);
+    if (pH_reading < 8.51) {
+      tft.setTextColor(GREEN, BLACK);
+    } else { 
+      tft.setTextColor(RED, BLACK);
+    }
     tft.print(pH_reading);
 
-    tft.fillRect(X_CENTER - 23, Y_CENTER + 40, 60, 10, BLACK);
-    tft.setCursor(X_CENTER - 25, Y_CENTER + 40);
+    tft.fillRect(X_CENTER - 23, Y_CENTER + 60, 40, 10, BLACK);
+    tft.setCursor(X_CENTER - 17, Y_CENTER + 60);
     tft.setTextSize(1);
-    tft.setTextColor(RED, BLACK);
-    tft.print("Alkaline");
+    if (pH_reading < 8.51) {
+      tft.setTextColor(GREEN, BLACK);
+    } else { 
+      tft.setTextColor(RED, BLACK);
+    }
+    tft.print("Base");
 
   } else {                                           // Neutral
-    tft.setCursor(X_CENTER - 70, Y_CENTER - 30);
-    tft.setTextSize(7);
+    tft.setCursor(X_CENTER - 40, Y_CENTER + 20);
+    tft.setTextSize(3);
     tft.setTextColor(GREEN, BLACK);
     tft.print(pH_reading);
 
-    tft.fillRect(X_CENTER - 23, Y_CENTER + 40, 60, 10, BLACK);
-    tft.setCursor(X_CENTER - 25, Y_CENTER + 40);
+    tft.fillRect(X_CENTER - 23, Y_CENTER + 60, 40, 10, BLACK);
+    tft.setCursor(X_CENTER - 25, Y_CENTER + 60);
     tft.setTextSize(1);
     tft.setTextColor(GREEN, BLACK);
     tft.print("Neutral");
   }
   if (pH_reading > 6.49 and pH_reading < 8.51) {    // Displaying if water if drinkable
-    tft.fillRect(X_CENTER - 81, Y_CENTER + 55, 160, 15, BLACK);
-    tft.setCursor(X_CENTER - 55, Y_CENTER + 55);
-    tft.setTextSize(2);
+    tft.fillRect(0, Y_CENTER - 30, X_MAX, 40, BLACK);
+    tft.setCursor(X_CENTER - 100, Y_CENTER - 30);
+    tft.setTextSize(4);
     tft.setTextColor(GREEN, BLACK);
     tft.print("Drinkable");
   } else {
-    tft.setCursor(X_CENTER - 80, Y_CENTER + 55);
-    tft.setTextSize(2);
+    tft.setCursor(5, Y_CENTER - 30);
+    tft.setTextSize(4);
     tft.setTextColor(RED, BLACK);
     tft.print("Not Drinkable");
   }
 }
 
-// Update all numbers on the batterScreen
+// Update all numbers on the batteryScreen
 void batteryInfo() {
   // battery percentage
   tft.setCursor(X_MAX - 55, 15);
