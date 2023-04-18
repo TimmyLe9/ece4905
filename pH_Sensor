@@ -58,7 +58,7 @@ void setup() {
 
   tft.initSPI();
   tft.begin();
-  tft.setRotation(1);
+  tft.setRotation(3);
   tft.fillScreen(BLACK);
 
   homeScreen();
