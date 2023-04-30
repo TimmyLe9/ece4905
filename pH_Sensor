@@ -21,13 +21,13 @@
 // For better pressure precision, we need to know the resistance
 // between X+ and X- Use any multimeter to read it
 // For the one we're using, its 300 ohms across the X plate
-TouchScreen ts = TouchScreen(XP, YP, XM, YM, 50);
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 #define TFT_SCK    21
 #define TFT_MISO   22
 #define TFT_MOSI   19
 #define TFT_CS     23
-#define TFT_DC     18
+#define TFT_DC     10 //18
 #define TFT_RESET  5
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCK, TFT_RESET, TFT_MISO);
 
@@ -72,19 +72,19 @@ void loop() {
   // put your main code here, to run repeatedly:
 
   TSPoint p = ts.getPoint();
-  //Serial.print("X = "); Serial.print(p.x);
-  //Serial.print("\tY = "); Serial.print(p.y);
-  //Serial.print("\tPressure = "); Serial.println(p.z);
+  Serial.print("X = "); Serial.print(p.x);
+  Serial.print("\tY = "); Serial.print(p.y);
+  Serial.print("\tPressure = "); Serial.println(p.z);
 
   // if battery button is pressed
-  if (p.x > -3100 and p.x < -1200 and p.y > -2800 and p.y < -1000 and p.z != 0 and screenPage != 1 and screenPage != 2) {
+  if (p.x > 0 and p.x < 400 and p.y > 30 and p.y < 500 and p.z != 0 and screenPage != 1 and screenPage != 2) {
     tft.fillScreen(BLACK);
     batteryScreen();
     screenPage = 1;
   }
 
   // if extra button is pressed
-  else if (p.x > -2400 and p.x < -1600 and p.y > -260 and p.y < 380 and p.z != 0 and screenPage != 2 and screenPage != 1) {
+  else if (p.x > -150 and p.x < 400 and p.y > -2400 and p.y < -1800 and p.z != 0 and screenPage != 2 and screenPage != 1) {
     tft.fillScreen(BLACK);
     extraScreen();
     screenPage = 2;
@@ -99,10 +99,6 @@ void loop() {
 
   if (screenPage == 0) {
     pH_display();
-  }
-
-  if (screenPage == 1) {
-    batteryInfo();
   }
 
   delay(500); // delay in ms
@@ -215,31 +211,24 @@ void pH_display() {
   }
 }
 
-// Update all numbers on the batteryScreen
-void batteryInfo() {
-  // battery percentage
-  tft.setCursor(X_MAX - 55, 15);
-  tft.setTextSize(2);
-  tft.setTextColor(YELLOW);
-  tft.print("##"); tft.print(" %");
-
-  // charge rate
-  tft.setCursor(X_MAX - 55, 35);
-  tft.setTextSize(2);
-  tft.setTextColor(YELLOW);
-  tft.print("##");
-}
-
 void batteryScreen() {
   tft.setCursor(10, 15);
   tft.setTextSize(2);
   tft.setTextColor(YELLOW);
-  tft.print("Battery Percentage: ");
+  tft.print("Reading the Battery %");
 
-  tft.setCursor(10, 35);
-  tft.setTextSize(2);
+  tft.setCursor(10, 40);
+  tft.setTextSize(1);
   tft.setTextColor(YELLOW);
-  tft.print("Charge Rate: ");
+  tft.print("Red Blinking: Low, Currently charging to 25% \n");
+  tft.print("\n");
+  tft.print("Red Solid, First Yellow Blinking: At 25%, Currently charging to 50% \n");
+  tft.print("\n");
+  tft.print("Red, First Yellow Solid, Second Yellow Blinking: At 50%, Currently charging to 75% \n");
+  tft.print("\n");
+  tft.print("Red, All Yellow Solid, Green Blinking: At 75%, Currently charging to 100% \n");
+  tft.print("\n");
+  tft.print("All Solid: Currently at 100% \n");
 
   // back button
   tft.fillRect(X_MAX - 75, Y_MAX - 50, 50, 40, CYAN);
@@ -254,8 +243,6 @@ void extraScreen() {
   tft.setCursor(1, 15);
   tft.setTextSize(2);
   tft.setTextColor(WHITE);
-  tft.print("This screen is extra...");
-  tft.print("\n");
   tft.print("Team 24 pH Sensor Project");
   tft.print("\n");
   tft.setTextSize(2);
